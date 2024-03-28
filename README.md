@@ -4,7 +4,7 @@ https://github.com/gabrielmartell/COMP3005-Project-Template
 
 Data imported from : https://github.com/statsbomb/open-data
 
-To pull repo: `git clone https://github.com/frederickberube0/COMP3005_FinalProject`
+To pull repo: `git clone https://github.com/JeremyFriesenGitHub/COMP_3005_Final_Project`
 
 -- Steps to run database --
 
