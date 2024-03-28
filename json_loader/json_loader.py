@@ -1,47 +1,53 @@
 import json
 import psycopg2
-import os
+from psycopg2 import extras
 
 # Database connection parameters
-db_params = {
-    "dbname": "project",
+conn_params = {
+    "dbname": "SoccerStatsDB",
     "user": "postgres",
     "password": "postgres",
-    "host": "localhost",
-    "port": "5432"
+    "host": "localhost"
 }
 
-# Base directory containing JSON files and subdirectories
-base_directory = 'C:\\Users\\fries\\PycharmProjects\\COMP3005_FinalProject\\JSON_Data_3005_Project'
+def load_competitions(filename):
+    # Open and load the JSON file
+    with open(filename, 'r') as file:
+        competitions = json.load(file)
 
+    # Connect to database
+    conn = psycopg2.connect(**conn_params)
 
-def load_json_to_db(filepath, cursor):
-    with open(filepath, 'r', encoding='utf-8') as file:
-        json_data = json.load(file)
-        cursor.execute(
-            "INSERT INTO raw_events_data (data) VALUES (%s)",
-            [json.dumps(json_data)]
-        )
+    # Using cursor() method to obtain a cursor object
+    with conn.cursor() as cursor:
+        # Preparing SQL query to INSERT a record into the database.
+        insert_query = """
+        INSERT INTO Competitions (competition_id, name, country_name, gender, youth, international) 
+        VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (competition_id) DO NOTHING;
+        """
 
+        # Prepared data for insertion
+        # Map JSON structure to table's schema
+        data_for_insertion = [
+            (
+                competition.get("competition_id"),
+                competition.get("competition_name"),
+                competition.get("country_name"),
+                competition.get("competition_gender"),
+                competition.get("competition_youth"),
+                competition.get("competition_international")
+            ) for competition in competitions
+        ]
 
-def walk_and_load(directory, cursor):
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if file.endswith('.json'):
-                filepath = os.path.join(root, file)
-                load_json_to_db(filepath, cursor)
+        # Using execute_batch for efficient bulk inserts
+        psycopg2.extras.execute_batch(cursor, insert_query, data_for_insertion)
 
-
-def main():
-    conn = psycopg2.connect(**db_params)
-    cursor = conn.cursor()
-
-    walk_and_load(base_directory, cursor)
-
+    # Committing the changes
     conn.commit()
-    cursor.close()
+
+    # Close the database connection
     conn.close()
 
 
-if __name__ == "__main__":
-    main()
+# load
+load_competitions('C:/Users/fries/PycharmProjects/COMP_3005_Final_Project/JSON_Data_3005_Project/competitions.json')
