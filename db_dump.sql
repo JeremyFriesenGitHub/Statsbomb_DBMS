@@ -1,0 +1,194 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.1
+-- Dumped by pg_dump version 16.1
+
+-- Started on 2024-03-29 17:22:09
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 215 (class 1259 OID 25173)
+-- Name: competitions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.competitions (
+    competition_id integer NOT NULL,
+    competition_name character varying(255),
+    country_name character varying(255),
+    gender character varying(50),
+    youth boolean,
+    international boolean
+);
+
+
+ALTER TABLE public.competitions OWNER TO postgres;
+
+--
+-- TOC entry 216 (class 1259 OID 25180)
+-- Name: seasons; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.seasons (
+    season_id integer NOT NULL,
+    competition_id integer NOT NULL,
+    season_name character varying(255),
+    match_updated timestamp without time zone,
+    match_available timestamp without time zone
+);
+
+
+ALTER TABLE public.seasons OWNER TO postgres;
+
+--
+-- TOC entry 4839 (class 0 OID 25173)
+-- Dependencies: 215
+-- Data for Name: competitions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.competitions (competition_id, competition_name, country_name, gender, youth, international) FROM stdin;
+9	1. Bundesliga	Germany	male	f	f
+16	Champions League	Europe	male	f	f
+87	Copa del Rey	Spain	male	f	f
+37	FA Women's Super League	England	female	f	f
+1470	FIFA U20 World Cup	International	male	f	f
+43	FIFA World Cup	International	male	f	t
+1238	Indian Super league	India	male	f	f
+11	La Liga	Spain	male	f	f
+81	Liga Profesional	Argentina	male	f	f
+7	Ligue 1	France	male	f	f
+116	North American League	North and Central America	male	f	f
+49	NWSL	United States of America	female	f	f
+2	Premier League	England	male	f	f
+12	Serie A	Italy	male	f	f
+55	UEFA Euro	Europe	male	f	t
+35	UEFA Europa League	Europe	male	f	f
+53	UEFA Women's Euro	Europe	female	f	t
+72	Women's World Cup	International	female	f	t
+\.
+
+
+--
+-- TOC entry 4840 (class 0 OID 25180)
+-- Dependencies: 216
+-- Data for Name: seasons; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.seasons (season_id, competition_id, season_name, match_updated, match_available) FROM stdin;
+27	9	2015/2016	2023-08-17 23:51:11.837478	2023-08-17 23:51:11.837478
+4	16	2018/2019	2023-03-07 12:20:48.11825	2023-03-07 12:20:48.11825
+1	16	2017/2018	2021-08-27 11:26:39.802832	2021-01-23 21:55:30.42533
+2	16	2016/2017	2021-08-27 11:26:39.802832	2020-07-29 05:00:00
+27	16	2015/2016	2021-08-27 11:26:39.802832	2020-07-29 05:00:00
+26	16	2014/2015	2021-08-27 11:26:39.802832	2020-07-29 05:00:00
+25	16	2013/2014	2021-08-27 11:26:39.802832	2020-07-29 05:00:00
+24	16	2012/2013	2021-08-27 11:26:39.802832	2021-07-10 13:41:45.751
+23	16	2011/2012	2021-08-27 11:26:39.802832	2020-07-29 05:00:00
+22	16	2010/2011	2022-01-26 21:07:11.033473	2022-01-26 21:07:11.033473
+21	16	2009/2010	2022-11-15 17:26:10.871011	2022-11-15 17:26:10.871011
+41	16	2008/2009	2021-11-07 14:20:01.699993	2021-11-07 14:20:01.699993
+39	16	2006/2007	2021-03-31 04:18:30.43706	2021-03-31 04:18:30.43706
+37	16	2004/2005	2021-04-01 06:18:57.459032	2021-04-01 06:18:57.459032
+44	16	2003/2004	2022-11-24 21:06:10.454916	2022-11-24 21:06:10.454916
+76	16	1999/2000	2020-07-29 05:00:00	2020-07-29 05:00:00
+277	16	1972/1973	2023-07-06 12:49:07.467625	2023-07-06 12:49:07.467625
+71	16	1971/1972	2020-07-29 05:00:00	2020-07-29 05:00:00
+276	16	1970/1971	2023-07-06 12:50:01.961048	2023-07-06 12:50:01.961048
+84	87	1983/1984	2020-07-29 05:00:00	2020-07-29 05:00:00
+268	87	1982/1983	2023-06-11 02:51:59.941964	2023-06-11 02:51:59.941964
+279	87	1977/1978	2023-06-26 10:36:15.442581	2023-06-26 10:36:15.442581
+90	37	2020/2021	2023-02-25 14:52:09.326729	2023-02-25 14:52:09.326729
+42	37	2019/2020	2023-07-25 01:08:03.214566	2023-07-25 01:08:03.214566
+4	37	2018/2019	2023-07-24 19:50:20.881595	2023-07-24 19:50:20.881595
+274	1470	1979	2023-06-28 10:55:11.501179	2023-06-28 10:55:11.501179
+106	43	2022	2023-08-12 16:44:27.619465	2023-08-12 16:44:27.619465
+3	43	2018	2023-07-24 13:09:34.513519	2023-07-24 13:09:34.513519
+55	43	1990	2023-06-28 10:58:20.137929	2023-06-28 10:58:20.137929
+54	43	1986	2023-06-28 11:20:34.252935	2023-06-28 11:20:34.252935
+51	43	1974	2023-07-17 23:19:58.853207	2023-07-17 23:19:58.853207
+272	43	1970	2023-07-17 23:24:45.579886	2023-07-17 23:24:45.579886
+270	43	1962	2023-06-26 10:38:00.323984	2023-06-26 10:38:00.323984
+269	43	1958	2023-06-26 10:33:08.214831	2023-06-26 10:33:08.214831
+108	1238	2021/2022	2023-03-31 02:14:09.896947	2023-03-31 02:14:09.896947
+90	11	2020/2021	2023-07-26 14:11:01.312143	2023-07-26 14:11:01.312143
+42	11	2019/2020	2023-07-25 00:16:32.999467	2023-07-25 00:16:32.999467
+4	11	2018/2019	2023-08-03 02:24:43.761907	2023-08-03 02:24:43.761907
+1	11	2017/2018	2023-07-24 13:03:48.574627	2023-07-24 13:03:48.574627
+2	11	2016/2017	2023-07-25 00:14:55.260536	2023-07-25 00:14:55.260536
+27	11	2015/2016	2023-07-24 21:52:42.890908	2023-07-24 21:52:42.890908
+26	11	2014/2015	2023-07-24 21:50:15.215072	2023-07-24 21:50:15.215072
+25	11	2013/2014	2022-07-23 12:18:49.547396	2022-07-23 12:18:49.547396
+24	11	2012/2013	2022-09-25 20:52:24.444609	2022-09-25 20:52:24.444609
+23	11	2011/2012	2022-12-01 14:10:17.791769	2022-12-01 14:10:17.791769
+22	11	2010/2011	2023-04-19 10:48:44.07983	2023-04-19 10:48:44.07983
+21	11	2009/2010	2023-04-19 10:48:01.770383	2023-04-19 10:48:01.770383
+41	11	2008/2009	2023-04-19 10:46:29.203565	2023-04-19 10:46:29.203565
+40	11	2007/2008	2023-04-19 10:42:35.284291	2023-04-19 10:42:35.284291
+39	11	2006/2007	2023-03-26 23:19:39.125951	2023-03-26 23:19:39.125951
+38	11	2005/2006	2022-07-03 12:34:31.749038	2022-07-03 12:34:31.749038
+37	11	2004/2005	2020-07-29 05:00:00	2020-07-29 05:00:00
+278	11	1973/1974	2023-07-06 12:50:48.80782	2023-07-06 12:50:48.80782
+48	81	1997/1998	2023-06-28 11:19:54.593488	2023-06-28 11:19:54.593488
+275	81	1981	2023-06-28 11:31:57.152298	2023-06-28 11:31:57.152298
+27	7	2015/2016	2023-08-17 21:35:27.554258	2023-08-17 21:35:27.554258
+68	116	1977	2023-07-24 09:06:54.144896	2023-07-24 09:06:54.144896
+3	49	2018	2023-07-24 13:01:22.094587	2023-07-24 13:01:22.094587
+27	2	2015/2016	2023-07-12 13:59:45.191483	2023-07-12 13:59:45.191483
+44	2	2003/2004	2023-03-11 10:52:12.57923	2023-03-11 10:52:12.57923
+27	12	2015/2016	2023-08-18 19:37:53.599961	2023-08-18 19:37:53.599961
+86	12	1986/1987	2023-06-18 01:55:53.343752	2023-06-18 01:55:53.343752
+43	55	2020	2023-02-24 21:26:47.128979	2023-02-24 21:26:47.128979
+75	35	1988/1989	2023-06-18 19:28:39.443883	2023-06-18 19:28:39.443883
+106	53	2022	2023-07-17 21:19:03.032991	2023-07-17 21:19:03.032991
+30	72	2019	2023-07-27 10:33:48.273734	2023-07-27 10:33:48.273734
+\.
+
+
+--
+-- TOC entry 4692 (class 2606 OID 25179)
+-- Name: competitions competitions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.competitions
+    ADD CONSTRAINT competitions_pkey PRIMARY KEY (competition_id);
+
+
+--
+-- TOC entry 4694 (class 2606 OID 25184)
+-- Name: seasons seasons_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.seasons
+    ADD CONSTRAINT seasons_pkey PRIMARY KEY (season_id, competition_id);
+
+
+--
+-- TOC entry 4695 (class 2606 OID 25185)
+-- Name: seasons seasons_competition_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.seasons
+    ADD CONSTRAINT seasons_competition_id_fkey FOREIGN KEY (competition_id) REFERENCES public.competitions(competition_id);
+
+
+-- Completed on 2024-03-29 17:22:15
+
+--
+-- PostgreSQL database dump complete
+--
+

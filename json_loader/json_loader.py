@@ -1,6 +1,7 @@
 import json
 import psycopg2
 from psycopg2 import extras
+from datetime import datetime
 
 # Database connection parameters
 conn_params = {
@@ -10,44 +11,57 @@ conn_params = {
     "host": "localhost"
 }
 
-def load_competitions(filename):
-    # Open and load the JSON file
-    with open(filename, 'r') as file:
-        competitions = json.load(file)
 
-    # Connect to database
+def load_data(filename):
+    with open(filename, 'r') as file:
+        data = json.load(file)
+
     conn = psycopg2.connect(**conn_params)
 
-    # Using cursor() method to obtain a cursor object
-    with conn.cursor() as cursor:
-        # Preparing SQL query to INSERT a record into the database.
-        insert_query = """
-        INSERT INTO Competitions (competition_id, name, country_name, gender, youth, international) 
-        VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (competition_id) DO NOTHING;
-        """
+    try:
+        with conn.cursor() as cursor:
+            # Insert Competitions
+            insert_competitions_query = """
+            INSERT INTO Competitions (competition_id, competition_name, country_name, gender, youth, international) 
+            VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (competition_id) DO NOTHING;
+            """
+            # Insert Seasons
+            insert_seasons_query = """
+            INSERT INTO Seasons (season_id, competition_id, season_name, match_updated, match_available)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (season_id, competition_id) DO NOTHING;
+            """
 
-        # Prepared data for insertion
-        # Map JSON structure to table's schema
-        data_for_insertion = [
-            (
-                competition.get("competition_id"),
-                competition.get("competition_name"),
-                competition.get("country_name"),
-                competition.get("competition_gender"),
-                competition.get("competition_youth"),
-                competition.get("competition_international")
-            ) for competition in competitions
-        ]
+            for item in data:
+                # Pre-process date strings
+                match_updated = datetime.fromisoformat(item["match_updated"].rstrip('Z'))
+                match_available = datetime.fromisoformat(item["match_available"].rstrip('Z'))
 
-        # Using execute_batch for efficient bulk inserts
-        psycopg2.extras.execute_batch(cursor, insert_query, data_for_insertion)
+                # Competitions data
+                cursor.execute(insert_competitions_query, (
+                    item["competition_id"],
+                    item["competition_name"],
+                    item["country_name"],
+                    item["competition_gender"],
+                    item["competition_youth"],
+                    item["competition_international"],
+                ))
 
-    # Committing the changes
-    conn.commit()
+                # Seasons data
+                cursor.execute(insert_seasons_query, (
+                    item["season_id"],
+                    item["competition_id"],
+                    item["season_name"],
+                    match_updated,
+                    match_available,
+                ))
 
-    # Close the database connection
-    conn.close()
+        conn.commit()
+    except psycopg2.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 
-# load
-load_competitions('C:/Users/fries/PycharmProjects/COMP_3005_Final_Project/JSON_Data_3005_Project/competitions.json')
+# Specify the path to your JSON file
+load_data('C:\\Users\\fries\\PycharmProjects\\COMP_3005_Final_Project\\JSON_Data_3005_Project\\competitions.json')
