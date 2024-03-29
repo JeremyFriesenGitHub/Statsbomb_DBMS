@@ -13,3 +13,4 @@ TODO:
 3. Create Teams table
 5. Create the 10 querries
 6. Check autograder
+7. Update formatting, loader, filenames, etc.
