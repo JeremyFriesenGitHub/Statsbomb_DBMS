@@ -6,9 +6,6 @@ Data imported from : https://github.com/statsbomb/open-data
 
 To pull repo: `git clone https://github.com/JeremyFriesenGitHub/COMP_3005_Final_Project`
 
--- Steps to run database --
-
-1. Install psycopg `pip install psycopg2`
 
 TODO: 
 1. Create Events + Event types/actions tables
