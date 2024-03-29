@@ -11,6 +11,7 @@ TODO:
 1. Create Events + Event types/actions tables
 2. Create Players table
 3. Create Teams table
+4. Create Matches? table
 5. Create the 10 querries
 6. Check autograder
 7. Update formatting, loader, filenames, etc.
