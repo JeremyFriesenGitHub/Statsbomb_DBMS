@@ -6,6 +6,8 @@ Data imported from : https://github.com/statsbomb/open-data
 
 To pull repo: `git clone https://github.com/JeremyFriesenGitHub/COMP_3005_Final_Project`
 
+Cloned repo : https://github.com/statsbomb/open-data.git 
+
 
 TODO: 
 1. Create Events + Event types/actions tables
