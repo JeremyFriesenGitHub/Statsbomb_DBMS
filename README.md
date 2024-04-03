@@ -12,6 +12,6 @@ Cloned repo : https://github.com/statsbomb/open-data.git
 TODO: 
 1. Fix the table's loaders, fix referees_ids
 1. Create Events + Event types/actions tables
-2. Create the 10 querries
+2. Create the 10 queries (queries.py)
 3. Check autograder
 4. Update formatting, loader, filenames, etc.
