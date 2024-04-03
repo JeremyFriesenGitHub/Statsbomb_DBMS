@@ -5,25 +5,6 @@ from datetime import datetime
 
 
 def create_tables(cursor):
-    drop_statements = [
-        "DROP TABLE IF EXISTS MatchManagers CASCADE;",
-        "DROP TABLE IF EXISTS Cards CASCADE;",
-        "DROP TABLE IF EXISTS Player_Positions CASCADE;",
-        "DROP TABLE IF EXISTS Matches CASCADE;",
-        "DROP TABLE IF EXISTS Seasons CASCADE;",
-        "DROP TABLE IF EXISTS Players CASCADE;",
-        "DROP TABLE IF EXISTS Positions CASCADE;",
-        "DROP TABLE IF EXISTS Managers CASCADE;",
-        "DROP TABLE IF EXISTS Referees CASCADE;",
-        "DROP TABLE IF EXISTS Stadiums CASCADE;",
-        "DROP TABLE IF EXISTS Teams CASCADE;",
-        "DROP TABLE IF EXISTS Countries CASCADE;",
-        "DROP TABLE IF EXISTS Competitions CASCADE;"
-    ]
-
-    for statement in drop_statements:
-        cursor.execute(statement)
-
     # SQL command to create Competitions table
     create_competitions_table = """
     CREATE TABLE Competitions (
@@ -180,7 +161,7 @@ def create_tables(cursor):
 
     # SQL command to create MatchManagers table
     create_match_managers_table = """
-    CREATE TABLE MatchManagers (
+    CREATE TABLE Match_Managers (
         match_id INTEGER,
         team_id INTEGER,
         manager_id INTEGER,
@@ -191,16 +172,21 @@ def create_tables(cursor):
     );
     """
 
-    # Execute the SQL commands in correct order
+    # Create foundational tables without dependencies
+
     cursor.execute(create_competitions_table)
+    cursor.execute(create_seasons_table)
     cursor.execute(create_countries_table)
+    cursor.execute(create_positions_table)
+
+    # Create tables with dependencies
     cursor.execute(create_teams_table)
     cursor.execute(create_stadiums_table)
     cursor.execute(create_referees_table)
     cursor.execute(create_managers_table)
-    cursor.execute(create_positions_table)
     cursor.execute(create_players_table)
-    cursor.execute(create_seasons_table)
+
+    # Create tables with multiple dependencies
     cursor.execute(create_matches_table)
     cursor.execute(create_players_positions_table)
     cursor.execute(create_cards_table)
@@ -228,7 +214,20 @@ def load_competitions(cursor):
             insert_season_into_database(cursor, competition)
 
 
-def load_lineups(cursor, lineups_dir, match_ids):
+def load_countries_and_positions(cursor, lineups_dir, match_ids):
+    for match_id in match_ids:
+        file_path = os.path.join(lineups_dir, f"{match_id}.json")
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                teams = json.load(file)
+                for team in teams:
+                    for player in team['lineup']:
+                        insert_country_into_database(cursor, player['country'])
+                        for position in player['positions']:
+                            insert_position_into_database(cursor, position)
+
+
+def load_teams(cursor, lineups_dir, match_ids):
     for match_id in match_ids:
         file_path = os.path.join(lineups_dir, f"{match_id}.json")
         if os.path.exists(file_path):
@@ -236,13 +235,35 @@ def load_lineups(cursor, lineups_dir, match_ids):
                 teams = json.load(file)
                 for team in teams:
                     insert_team_into_database(cursor, team)
+
+
+def load_stadiums_referees_and_managers(cursor, matches_file):
+    if os.path.exists(matches_file):
+        with open(matches_file, 'r', encoding='utf-8') as file:
+            matches = json.load(file)
+            for match in matches:
+                if 'stadium' in match:
+                    insert_stadium_into_database(cursor, match['stadium'])
+
+                if 'referee' in match:
+                    insert_referee_into_database(cursor, match['referee'])
+
+                for manager in match['home_team'].get('managers', []):
+                    insert_manager_into_database(cursor, manager)
+
+                for manager in match['away_team'].get('managers', []):
+                    insert_manager_into_database(cursor, manager)
+
+
+def load_players(cursor, lineups_dir, match_ids):
+    for match_id in match_ids:
+        file_path = os.path.join(lineups_dir, f"{match_id}.json")
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                teams = json.load(file)
+                for team in teams:
                     for player in team['lineup']:
                         insert_player_into_database(cursor, player, team['team_id'])
-                        for position in player['positions']:
-                            insert_position_into_database(cursor, position)
-                            insert_player_position_into_database(cursor, player['player_id'], position, match_id)
-                        for card in player['cards']:
-                            insert_card_into_database(cursor, player['player_id'], card, match_id)
 
 
 def load_matches(cursor, matches_file):
@@ -250,25 +271,77 @@ def load_matches(cursor, matches_file):
         with open(matches_file, 'r', encoding='utf-8') as file:
             matches = json.load(file)
             for match in matches:
-
                 insert_match_into_database(cursor, match)
 
-                if 'stadium' in match:
-                    insert_stadium_into_database(cursor, match['stadium'])
 
-                if 'referee' in match:
-                    insert_referee_into_database(cursor, match['referee'])
-                    # print(match['referee']['id'])
+def load_player_positions_and_cards(cursor, lineups_dir, match_ids):
+    for match_id in match_ids:
+        file_path = os.path.join(lineups_dir, f"{match_id}.json")
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                teams = json.load(file)
+                for team in teams:
+                    for player in team['lineup']:
+                        for position in player['positions']:
+                            insert_player_position_into_database(cursor, player['player_id'], position, match_id)
+                        for card in player['cards']:
+                            insert_card_into_database(cursor, player['player_id'], card, match_id)
 
-                for manager in match['home_team'].get('managers', []):
-                    insert_manager_into_database(cursor, manager)
-                    insert_match_manager_into_database(cursor, match['match_id'], match['home_team']['home_team_id'],
-                                                       manager['id'])
 
+def load_match_managers(cursor, matches_file):
+    if os.path.exists(matches_file):
+        with open(matches_file, 'r', encoding='utf-8') as file:
+            matches = json.load(file)
+            for match in matches:
                 for manager in match['away_team'].get('managers', []):
-                    insert_manager_into_database(cursor, manager)
                     insert_match_manager_into_database(cursor, match['match_id'], match['away_team']['away_team_id'],
                                                        manager['id'])
+
+
+# lineups ordering
+
+# def load_lineups(cursor, lineups_dir, match_ids):
+#     for match_id in match_ids:
+#         file_path = os.path.join(lineups_dir, f"{match_id}.json")
+#         if os.path.exists(file_path):
+#             with open(file_path, 'r', encoding='utf-8') as file:
+#                 teams = json.load(file)
+#                 for team in teams:
+#                     insert_team_into_database(cursor, team)
+#                     for player in team['lineup']:
+#                         insert_player_into_database(cursor, player, team['team_id'])
+#                         for position in player['positions']:
+#                             insert_position_into_database(cursor, position)
+#                             insert_player_position_into_database(cursor, player['player_id'], position, match_id)
+#                         for card in player['cards']:
+#                             insert_card_into_database(cursor, player['player_id'], card, match_id)
+
+
+# matches ordering
+
+# def load_matches(cursor, matches_file):
+#     if os.path.exists(matches_file):
+#         with open(matches_file, 'r', encoding='utf-8') as file:
+#             matches = json.load(file)
+#             for match in matches:
+#
+#                 insert_match_into_database(cursor, match)
+#
+#                 if 'stadium' in match:
+#                     insert_stadium_into_database(cursor, match['stadium'])
+#
+#                 if 'referee' in match:
+#                     insert_referee_into_database(cursor, match['referee'])
+#                     # print(match['referee']['id'])
+#
+#                 for manager in match['home_team'].get('managers', []):
+#                     insert_manager_into_database(cursor, manager)
+#                     insert_match_manager_into_database(cursor, match['match_id'], match['home_team']['home_team_id'],
+#                                                        manager['id'])
+#
+#                 for manager in match['away_team'].get('managers', []):
+#                     insert_manager_into_database(cursor, manager)
+#                     insert_match_manager_into_database(cursor, match['match_id'], match['away_team']['away_team_id'], manager['id'])
 
 
 def insert_match_into_database(cursor, match):
@@ -302,7 +375,7 @@ def insert_referee_into_database(cursor, referee):
 def insert_match_manager_into_database(cursor, match_id, team_id, manager_id):
     try:
         insert_query = """
-        INSERT INTO MatchManagers (match_id, team_id, manager_id)
+        INSERT INTO Match_Managers (match_id, team_id, manager_id)
         VALUES (%s, %s, %s)
         ON CONFLICT DO NOTHING;
         """
@@ -359,7 +432,6 @@ def insert_team_into_database(cursor, team):
 
 
 def insert_player_into_database(cursor, player, team_id):
-    insert_country_into_database(cursor, player['country'])
     try:
         insert_query = """
         INSERT INTO Players (player_id, player_name, player_nickname, jersey_number, country_id, team_id)
@@ -511,6 +583,7 @@ def main():
 
     with psycopg.connect(**conn_params) as conn:
         with conn.cursor() as cur:
+
             # tables
             create_tables(cur)
             conn.commit()
@@ -519,16 +592,32 @@ def main():
             load_competitions(cur)
             conn.commit()
 
-            # lineups
             for comp_id, seasons in competitions_seasons.items():
                 comp_dir = os.path.join(matches_dir, str(comp_id))
                 for season_id in seasons:
                     match_ids = extract_match_ids_for_season(comp_dir, season_id)
-                    load_lineups(cur, lineups_dir, match_ids)
-                    conn.commit()
                     season_path = os.path.join(matches_dir, str(comp_id), f"{season_id}.json")
-                    # matches
+
+                    # in order
+                    load_countries_and_positions(cur, lineups_dir, match_ids)
+                    conn.commit()
+
+                    load_teams(cur, lineups_dir, match_ids)
+                    conn.commit()
+
+                    load_stadiums_referees_and_managers(cur, season_path)
+                    conn.commit()
+
+                    load_players(cur, lineups_dir, match_ids)
+                    conn.commit()
+
                     load_matches(cur, season_path)
+                    conn.commit()
+
+                    load_player_positions_and_cards(cur, lineups_dir, match_ids)
+                    conn.commit()
+
+                    load_match_managers(cur, season_path)
                     conn.commit()
 
 
