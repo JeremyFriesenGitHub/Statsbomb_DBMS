@@ -1,0 +1,33 @@
+
+lineups obj {
+    team_id, int
+    team_name, varchar
+    lineup obj {
+        player_id, int
+        player_name, varchar
+        player_nickname, varchar
+        jersey_number, int
+        country obj{
+            id, int
+            name, varchar
+        }
+
+        cards obj {
+            time, time
+            card_type, varchar
+            reason, varchar
+            period, int
+        }
+
+        positions obj {
+            position_id, int
+            position, varchar
+            from, time
+            to, time
+            from_period, int or null
+            to_period, int or null
+            start_reason, varchar
+            end_reason, varchar
+        }
+    }
+}
