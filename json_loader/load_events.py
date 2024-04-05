@@ -50,7 +50,7 @@ def create_tables(cursor):
     );
     """
 
-    create_play_pattern_table= """
+    create_play_pattern_table = """
     CREATE TABLE play_pattern (
     play_pattern_id integer PRIMARY KEY,
     play_pattern_name VARCHAR(255)
