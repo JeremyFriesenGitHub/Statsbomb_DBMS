@@ -2,6 +2,7 @@ import os
 import json
 import psycopg
 
+
 def create_tables(cursor):
     create_player_match_participation_table = """
     CREATE TABLE PlayerMatchParticipations (
@@ -60,29 +61,6 @@ def create_tables(cursor):
     cursor.execute(create_cards_table)
     cursor.execute(create_player_match_participation_table)
 
-
-# def load_lineups(cursor, file_path, match_ids):
-#     for match_id in match_ids:
-#         file_path = os.path.join(file_path, f"{match_id}.json")
-#         if os.path.exists(file_path):
-#             with open(file_path, 'r', encoding='utf-8') as file:
-#                 data = json.load(file)
-#             for team in data:
-#                 team_id = team["team_id"]
-#                 for player in team["lineup"]:
-#                     player_id = player["player_id"]
-#                     # Insert or update player information here
-#                     # insert_player_into_database(cursor, player) - You'd need to implement this
-#
-#                     # Insert into Lineups
-#                     insert_into_lineups(cursor, match_id, team_id, player_id)
-#                     lineup_id = cursor.fetchone()[0] # Assuming this returns the id of the inserted row
-#
-#                     for position in player["positions"]:
-#                         insert_position_into_database(cursor, lineup_id, position)
-#
-#                     for card in player.get("cards", []):
-#                         insert_card_into_database(cursor, lineup_id, card)
 
 def load_positions_and_countries(cursor, lineups_dir, match_ids):
     for match_id in match_ids:
