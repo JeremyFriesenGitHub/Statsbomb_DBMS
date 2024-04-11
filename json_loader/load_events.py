@@ -1103,13 +1103,15 @@ def create_tables(cursor):
         """
 
     create_cards_table = """
-    CREATE TABLE Cards (
+   CREATE TABLE cards (
     card_pk_id SERIAL PRIMARY KEY,
     bad_behaviour_id UUID,
     foul_committed_id UUID,
+    UNIQUE (bad_behaviour_id),
+    UNIQUE (foul_committed_id),
     FOREIGN KEY (bad_behaviour_id) REFERENCES bad_behaviours (id),
     FOREIGN KEY (foul_committed_id) REFERENCES fouls_committed (id)
-    );
+);
     """
 
     cursor.execute(create_event_types_table)
@@ -1340,9 +1342,9 @@ def load_cards(cursor, events_dir, match_ids):
                 events = json.load(file)
                 for event in events:
                     if "bad_behaviour" in event and event['bad_behaviour'].get('card') is not None:
-                        insert_card_behaviours(cursor, event)
+                        insert_card_behaviours(cursor, event['id'])
                     if "foul_committed" in event and event['foul_committed'].get('card') is not None:
-                        insert_card_fouls(cursor, event)
+                        insert_card_fouls(cursor, event['id'])
 
 
 
@@ -1706,7 +1708,7 @@ def insert_shot(cursor, event, match_id):
                         match_id))
     except Exception as e:
         print(f"Error inserting shot event {event['id']}: {e}")
-        # print(match_id)
+
 
 
 def insert_pass(cursor, event, match_id):
@@ -1767,7 +1769,7 @@ def insert_pass(cursor, event, match_id):
                         under_pressure, off_camera, counterpress, out, match_id))
     except Exception as e:
         print(f"Error inserting pass event {event['id']}: {e}")
-        # print(match_id)
+
 
 
 def insert_own_goal2(cursor, event, match_id):
@@ -2408,32 +2410,29 @@ def insert_card(cursor, card):
     except Exception as e:
         print(f"Error inserting card {card['id']}: {e}")
 
-
 def insert_card_behaviours(cursor, event_id):
     try:
         insert_query = """
-        INSERT INTO cards(bad_behaviour_id)
+        INSERT INTO cards (bad_behaviour_id)
         VALUES (%s)
         ON CONFLICT (bad_behaviour_id) DO NOTHING;
         """
 
-        cursor.execute(insert_query, event_id)
+        cursor.execute(insert_query, (event_id,))
     except Exception as e:
         print(f"Error inserting card {event_id}: {e}")
-
 
 def insert_card_fouls(cursor, event_id):
     try:
         insert_query = """
-        INSERT INTO cards(foul_committed_id)
+        INSERT INTO cards (foul_committed_id)
         VALUES (%s)
         ON CONFLICT (foul_committed_id) DO NOTHING;
         """
-
-        cursor.execute(insert_query, event_id)
+        # Ensure the event_id is passed as a tuple
+        cursor.execute(insert_query, (event_id,))
     except Exception as e:
         print(f"Error inserting card {event_id}: {e}")
-
 
 def insert_height(cursor, height):
     try:
