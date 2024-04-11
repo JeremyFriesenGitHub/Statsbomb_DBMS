@@ -341,7 +341,7 @@ def main():
     }
 
     conn_params = {
-        'dbname': os.getenv('DB_NAME', 'SoccerStatsDB'),
+        'dbname': os.getenv('DB_NAME', 'postgres'),
         'user': os.getenv('DB_USER', 'postgres'),
         'password': os.getenv('DB_PASSWORD', 'postgres'),
         'host': os.getenv('DB_HOST', 'localhost'),

@@ -1,7 +1,7 @@
 import os
 import json
 import psycopg
-from datetime import datetime
+import sys
 
 
 def create_tables(cursor):
@@ -1021,16 +1021,87 @@ def create_tables(cursor):
         FOREIGN KEY (position_id) REFERENCES positions (position_id)
     );
     """
-    # #to change for subs, tactics, etc.
-    # create_tactics_table = """
-    # CREATE TABLE Tactics (
-    # event_id UUID PRIMARY KEY,
-    # formation INTEGER,
-    # FOREIGN KEY (event_id) REFERENCES Events(event_id)
-    # );
-    # """
 
-    # to optimize
+    create_start_lineup_table = """
+    CREATE TABLE Start_lineups (
+    id UUID PRIMARY KEY,
+        index INTEGER NOT NULL,
+        period INTEGER,
+        timestamp TIME,
+        minute INTEGER,
+        second INTEGER,
+        event_type_id INTEGER,
+        possession INTEGER,
+        possession_team_id INTEGER,
+        play_pattern_id INTEGER,
+        team_id INTEGER,
+        duration FLOAT,
+    formation INTEGER,
+    match_id INTEGER,
+    FOREIGN KEY (match_id) REFERENCES matches (match_id),
+        FOREIGN KEY (event_type_id) REFERENCES event_types (event_type_id),
+        FOREIGN KEY (possession_team_id) REFERENCES teams (team_id),
+        FOREIGN KEY (play_pattern_id) REFERENCES play_patterns (play_pattern_id),
+        FOREIGN KEY (team_id) REFERENCES teams (team_id)
+    );
+    """
+
+    create_substitution_table = """
+    CREATE TABLE Substitutions (
+    id UUID PRIMARY KEY,
+        index INTEGER NOT NULL,
+        period INTEGER,
+        timestamp TIME,
+        minute INTEGER,
+        second INTEGER,
+        event_type_id INTEGER,
+        possession INTEGER,
+        possession_team_id INTEGER,
+        play_pattern_id INTEGER,
+        team_id INTEGER,
+        player_id INTEGER,
+        position_id INTEGER,
+        duration FLOAT, 
+        outcome_id INTEGER,
+        replacement_id INTEGER,
+        off_camera BOOLEAN,
+        match_id INTEGER,
+        FOREIGN KEY (match_id) REFERENCES matches (match_id),
+        FOREIGN KEY (event_type_id) REFERENCES event_types (event_type_id),
+        FOREIGN KEY (possession_team_id) REFERENCES teams (team_id),
+        FOREIGN KEY (play_pattern_id) REFERENCES play_patterns (play_pattern_id),
+        FOREIGN KEY (team_id) REFERENCES teams (team_id),
+        FOREIGN KEY (player_id) REFERENCES players (player_id),
+        FOREIGN KEY (position_id) REFERENCES positions (position_id),
+        FOREIGN KEY (outcome_id) REFERENCES event_outcomes (outcome_id),
+        FOREIGN KEY (replacement_id) REFERENCES players(player_id)
+        );
+    """
+
+    create_shift_lineup_table = """
+        CREATE TABLE Shift_lineups (
+        id UUID PRIMARY KEY,
+            index INTEGER NOT NULL,
+            period INTEGER,
+            timestamp TIME,
+            minute INTEGER,
+            second INTEGER,
+            event_type_id INTEGER,
+            possession INTEGER,
+            possession_team_id INTEGER,
+            play_pattern_id INTEGER,
+            team_id INTEGER,
+            duration FLOAT,
+            formation INTEGER,
+        match_id INTEGER,
+        FOREIGN KEY (match_id) REFERENCES matches (match_id),
+            FOREIGN KEY (event_type_id) REFERENCES event_types (event_type_id),
+            FOREIGN KEY (possession_team_id) REFERENCES teams (team_id),
+            FOREIGN KEY (play_pattern_id) REFERENCES play_patterns (play_pattern_id),
+            FOREIGN KEY (team_id) REFERENCES teams (team_id)
+        );
+        """
+
     cursor.execute(create_event_types_table)
     cursor.execute(create_play_pattern_table)
     cursor.execute(create_event_outcome_table)
@@ -1068,7 +1139,9 @@ def create_tables(cursor):
     cursor.execute(create_pressure_table)
     cursor.execute(create_table_referee_ball_drop)
     cursor.execute(create_shield_table)
-    # cursor.execute(create_tactics_table)
+    cursor.execute(create_start_lineup_table)
+    cursor.execute(create_substitution_table)
+    cursor.execute(create_shift_lineup_table)
 
 
 def load_event_types(cursor, events_dir, match_ids):
@@ -1162,17 +1235,6 @@ def load_event_types(cursor, events_dir, match_ids):
                         insert_outcomes(cursor, dribble_outcome)
 
 
-# def load_tactics(cursor, events_dir, match_ids):
-#     for match_id in match_ids:
-#         specific_file_path = os.path.join(events_dir, f"{match_id}.json")
-#         if os.path.exists(specific_file_path):
-#             with open(specific_file_path, 'r', encoding='utf-8') as file:
-#                 events = json.load(file)
-#                 for event in events:
-#                     if 'tactics' in event:
-#                         insert_tactics(cursor, event['id'], event['tactics'])
-
-
 def load_events(cursor, events_dir, match_ids):
     for match_id in match_ids:
         specific_file_path = os.path.join(events_dir, f"{match_id}.json")
@@ -1238,6 +1300,12 @@ def load_events(cursor, events_dir, match_ids):
                         insert_ball_drop(cursor, event, match_id)
                     if event.get('type', {}).get('name') == "Shield":
                         insert_shield(cursor, event, match_id)
+                    if event.get('type', {}).get('name') == "Starting XI":
+                        insert_start_lineup(cursor, event, match_id)
+                    if event.get('type', {}).get('name') == "Tactical Shift":
+                        insert_shift_lineup(cursor, event, match_id)
+                    if "substitution" in event:
+                        insert_substitution(cursor, event, match_id)
 
 
 def load_key_passes_and_shots(cursor, events_dir, match_ids):
@@ -1312,6 +1380,52 @@ def insert_player_off(cursor, event, match_id):
                         off_camera, match_id))
     except Exception as e:
         print(f"Error inserting player off event {event['id']}: {e}")
+
+
+def insert_start_lineup(cursor, event, match_id):
+    try:
+        event_timestamp = event.get('timestamp')
+        if event_timestamp:
+            hours, minutes, seconds = event_timestamp.split(':')
+            event_timestamp = f"{int(hours):02}:{int(minutes):02}:{float(seconds):06.3f}"
+        tactics = event['tactics']['formation']
+
+        insert_query = """
+        INSERT INTO Start_lineups (id, index, period, timestamp, minute, second, event_type_id, possession, possession_team_id, play_pattern_id ,team_id, duration,  formation, match_id)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s)
+        ON CONFLICT (id) DO NOTHING;
+        """
+
+        cursor.execute(insert_query,
+                       (event['id'], event['index'], event['period'], event_timestamp, event['minute'], event['second'],
+                        event['type']['id'], event['possession'], event['possession_team']['id'],
+                        event['play_pattern']['id'],
+                        event['team']['id'], event['duration'], tactics, match_id))
+    except Exception as e:
+        print(f"Error inserting start lineup event {event['id']}: {e}")
+
+
+def insert_shift_lineup(cursor, event, match_id):
+    try:
+        event_timestamp = event.get('timestamp')
+        if event_timestamp:
+            hours, minutes, seconds = event_timestamp.split(':')
+            event_timestamp = f"{int(hours):02}:{int(minutes):02}:{float(seconds):06.3f}"
+        tactics = event['tactics']['formation']
+
+        insert_query = """
+        INSERT INTO Shift_lineups (id, index, period, timestamp, minute, second, event_type_id, possession, possession_team_id, play_pattern_id ,team_id, duration,  formation, match_id)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        ON CONFLICT (id) DO NOTHING;
+        """
+
+        cursor.execute(insert_query,
+                       (event['id'], event['index'], event['period'], event_timestamp, event['minute'], event['second'],
+                        event['type']['id'], event['possession'], event['possession_team']['id'],
+                        event['play_pattern']['id'],
+                        event['team']['id'], event['duration'], tactics, match_id))
+    except Exception as e:
+        print(f"Error inserting shift lineup event {event['id']}: {e}")
 
 
 def insert_ball_drop(cursor, event, match_id):
@@ -1464,6 +1578,32 @@ def insert_offside(cursor, event, match_id):
                         event['duration'], match_id))
     except Exception as e:
         print(f"Error inserting offside event {event['id']}: {e}")
+
+
+def insert_substitution(cursor, event, match_id):
+    try:
+        event_timestamp = event.get('timestamp')
+        if event_timestamp:
+            hours, minutes, seconds = event_timestamp.split(':')
+            event_timestamp = f"{int(hours):02}:{int(minutes):02}:{float(seconds):06.3f}"
+
+        off_camera = event.get('off_camera', None)
+
+        insert_query = """
+        INSERT INTO Substitutions (id, index, period, timestamp, minute, second, event_type_id, possession, possession_team_id, play_pattern_id, team_id, player_id, position_id, duration, outcome_id, replacement_id, off_camera, match_id)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        ON CONFLICT (id) DO NOTHING;
+        """
+
+        cursor.execute(insert_query,
+                       (event['id'], event['index'], event['period'], event_timestamp, event['minute'], event['second'],
+                        event['type']['id'], event['possession'], event['possession_team']['id'],
+                        event['play_pattern']['id'],
+                        event['team']['id'], event['player']['id'], event['position']['id'], event['duration'],
+                        event['substitution']['outcome']['id'], event['substitution']['replacement']['id'], off_camera,
+                        match_id))
+    except Exception as e:
+        print(f"Error inserting substitution event {event['id']}: {e}")
 
 
 def insert_own_goal(cursor, event, match_id):
@@ -2379,7 +2519,7 @@ def main():
     }
 
     conn_params = {
-        'dbname': os.getenv('DB_NAME', 'SoccerStatsDB'),
+        'dbname': os.getenv('DB_NAME', 'postgres'),
         'user': os.getenv('DB_USER', 'postgres'),
         'password': os.getenv('DB_PASSWORD', 'postgres'),
         'host': os.getenv('DB_HOST', 'localhost'),
@@ -2399,12 +2539,10 @@ def main():
                 with conn.cursor() as cur:
                     load_event_types(cur, events_dir, match_ids)
                     load_events(cur, events_dir, match_ids)
-
                 conn.commit()
 
                 with conn.cursor() as cur:
                     load_key_passes_and_shots(cur, events_dir, match_ids)
-                    # load_tactics(cur, events_dir, match_ids)
                 conn.commit()
 
 
