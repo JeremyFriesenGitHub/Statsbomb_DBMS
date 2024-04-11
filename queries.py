@@ -175,7 +175,15 @@ def Q_1(cursor, conn, execution_time):
     # ==========================================================================
     # Enter QUERY within the quotes:
 
-    query = """ """
+    query = """
+            SELECT Players.player_name, AVG(Shots.statsbomb_xg) AS avg_xG
+            FROM Shots JOIN Players ON Shots.player_id = Players.player_id
+            JOIN Matches ON Shots.match_id = Matches.match_id
+            WHERE Shots.statsbomb_xg > 0 AND Matches.season_id = 90 AND Matches.competition_id = 11
+            GROUP BY Players.player_name
+            HAVING COUNT(Shots.id) > 0
+            ORDER BY avg_xG DESC;
+            """
 
     # ==========================================================================
 
@@ -194,7 +202,15 @@ def Q_2(cursor, conn, execution_time):
     # ==========================================================================
     # Enter QUERY within the quotes:
 
-    query = """ """
+    query = """
+            SELECT Players.player_name, COUNT(Shots.id) AS number_of_shots
+            FROM Shots JOIN Players ON Shots.player_id = Players.player_id
+            JOIN Matches ON Shots.match_id = Matches.match_id
+            WHERE Matches.season_id = 90 AND Matches.competition_id = 11
+            GROUP BY Players.player_name
+            HAVING COUNT(Shots.id) > 0
+            ORDER BY number_of_shots DESC;
+            """
 
     # ==========================================================================
 

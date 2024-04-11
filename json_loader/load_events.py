@@ -1,7 +1,7 @@
 import os
 import json
 import psycopg
-import sys
+
 
 
 def create_tables(cursor):
