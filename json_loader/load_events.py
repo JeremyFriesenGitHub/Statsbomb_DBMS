@@ -1102,6 +1102,16 @@ def create_tables(cursor):
         );
         """
 
+    create_cards_table = """
+    CREATE TABLE Cards (
+    card_pk_id SERIAL PRIMARY KEY,
+    bad_behaviour_id UUID,
+    foul_committed_id UUID,
+    FOREIGN KEY (bad_behaviour_id) REFERENCES bad_behaviours (id),
+    FOREIGN KEY (foul_committed_id) REFERENCES fouls_committed (id)
+    );
+    """
+
     cursor.execute(create_event_types_table)
     cursor.execute(create_play_pattern_table)
     cursor.execute(create_event_outcome_table)
@@ -1122,6 +1132,7 @@ def create_tables(cursor):
     cursor.execute(create_table_error)
     cursor.execute(create_table_foul_committed)
     cursor.execute(create_table_foul_won)
+    cursor.execute(create_cards_table)
     cursor.execute(create_table_goalkeeper)
     cursor.execute(create_table_half_end)
     cursor.execute(create_table_half_start)
@@ -1320,6 +1331,19 @@ def load_key_passes_and_shots(cursor, events_dir, match_ids):
                     if 'pass' in event and 'assisted_shot_id' in event['pass'] and event['pass'][
                         'assisted_shot_id'] is not None:
                         insert_key_passes_and_shots(cursor, event['id'], event['pass']['assisted_shot_id'])
+
+def load_cards(cursor, events_dir, match_ids):
+    for match_id in match_ids:
+        specific_file_path = os.path.join(events_dir, f"{match_id}.json")
+        if os.path.exists(specific_file_path):
+            with open(specific_file_path, 'r', encoding='utf-8') as file:
+                events = json.load(file)
+                for event in events:
+                    if "bad_behaviour" in event and event['bad_behaviour'].get('card') is not None:
+                        insert_card_behaviours(cursor, event)
+                    if "foul_committed" in event and event['foul_committed'].get('card') is not None:
+                        insert_card_fouls(cursor, event)
+
 
 
 def insert_block(cursor, event, match_id):
@@ -2385,6 +2409,32 @@ def insert_card(cursor, card):
         print(f"Error inserting card {card['id']}: {e}")
 
 
+def insert_card_behaviours(cursor, event_id):
+    try:
+        insert_query = """
+        INSERT INTO cards(bad_behaviour_id)
+        VALUES (%s)
+        ON CONFLICT (bad_behaviour_id) DO NOTHING;
+        """
+
+        cursor.execute(insert_query, event_id)
+    except Exception as e:
+        print(f"Error inserting card {event_id}: {e}")
+
+
+def insert_card_fouls(cursor, event_id):
+    try:
+        insert_query = """
+        INSERT INTO cards(foul_committed_id)
+        VALUES (%s)
+        ON CONFLICT (foul_committed_id) DO NOTHING;
+        """
+
+        cursor.execute(insert_query, event_id)
+    except Exception as e:
+        print(f"Error inserting card {event_id}: {e}")
+
+
 def insert_height(cursor, height):
     try:
         insert_query = """
@@ -2463,19 +2513,6 @@ def insert_play_pattern_into_database(cursor, play_pattern):
         print(f"Error inserting play pattern {play_pattern['id']}: {e}")
 
 
-# def insert_tactics(cursor, event_id, tactics):
-#     try:
-#         formation = tactics.get('formation')
-#         if formation:
-#             insert_query = """
-#             INSERT INTO Tactics (event_id, formation)
-#             VALUES (%s, %s)
-#             """
-#             cursor.execute(insert_query, (event_id, formation))
-#     except Exception as e:
-#         print(f"Error error inserting tactics {event_id}: {e}")
-
-
 def insert_outcomes(cursor, outcome):
     try:
         insert_query = """
@@ -2542,6 +2579,7 @@ def main():
                 conn.commit()
 
                 with conn.cursor() as cur:
+                    load_cards(cur, events_dir, match_ids)
                     load_key_passes_and_shots(cur, events_dir, match_ids)
                 conn.commit()
 

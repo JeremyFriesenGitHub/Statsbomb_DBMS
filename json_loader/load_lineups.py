@@ -42,23 +42,10 @@ def create_tables(cursor):
     );
     """
 
-    create_cards_table = """
-    CREATE TABLE Cards (
-    card_time VARCHAR(10),
-    card_type VARCHAR(255),
-    reason VARCHAR(255),
-    card_period INTEGER,
-    card_id SERIAL PRIMARY KEY, 
-    match_id INTEGER,
-    player_id INTEGER,
-    FOREIGN KEY (match_id) REFERENCES Matches(match_id),
-    FOREIGN KEY (player_id) REFERENCES Players(player_id)
-    );
-    """
 
     cursor.execute(create_positions_table)
     cursor.execute(create_players_table)
-    cursor.execute(create_cards_table)
+
     cursor.execute(create_player_match_participation_table)
 
 
@@ -84,20 +71,6 @@ def load_players(cursor, lineups_dir, match_ids):
                 for team in teams:
                     for player in team['lineup']:
                         insert_player_into_database(cursor, player)
-
-
-def load_cards(cursor, lineups_dir, match_ids):
-    for match_id in match_ids:
-        specific_file_path = os.path.join(lineups_dir, f"{match_id}.json")
-        if os.path.exists(specific_file_path):
-            with open(specific_file_path, 'r', encoding='utf-8') as file:
-                teams = json.load(file)
-                for team in teams:
-                    for player in team['lineup']:
-                        player_id = player['player_id']
-                        for card in player['cards']:
-                            insert_card_into_database(cursor, card, match_id, player_id)
-
 
 def load_player_match_participants(cursor, lineups_dir, match_ids):
     for match_id in match_ids:
@@ -152,20 +125,6 @@ def insert_player_into_database(cursor, player):
             player['country']['id']))
     except Exception as e:
         print(f"Error inserting player {player['player_id']}: {e}")
-
-
-def insert_card_into_database(cursor, card, match_id, player_id):
-    try:
-        insert_query = """
-        INSERT INTO Cards (card_time, card_type, reason, card_period, match_id, player_id)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        ON CONFLICT (card_id) DO NOTHING;
-        """
-
-        cursor.execute(insert_query,
-                       (card['time'], card['card_type'], card['reason'], card['period'], match_id, player_id))
-    except Exception as e:
-        print(f"Error inserting card : {e}")
 
 
 def insert_player_match_participation_into_database(cursor, position, match_id, player_id, team_id):
@@ -238,9 +197,6 @@ def main():
                     conn.commit()
 
                     load_players(cur, lineups_dir, match_ids)
-                    conn.commit()
-
-                    load_cards(cur, lineups_dir, match_ids)
                     conn.commit()
 
                     load_player_match_participants(cur, lineups_dir, match_ids)
