@@ -229,7 +229,16 @@ def Q_3(cursor, conn, execution_time):
     # ==========================================================================
     # Enter QUERY within the quotes:
 
-    query = """ """
+    query = """
+            SELECT Players.player_name, COUNT(*) AS number_of_first_time_shots
+            FROM Shots JOIN Players ON Shots.player_id = Players.player_id
+            JOIN Matches ON Shots.match_id = Matches.match_id
+            JOIN Seasons ON Matches.season_id = Seasons.season_id AND Matches.competition_id = Seasons.competition_id
+            WHERE Shots.first_time = TRUE AND Seasons.season_id IN (90, 4, 42)  AND Seasons.competition_id = 11
+            GROUP BY Players.player_name
+            HAVING COUNT(*) > 0
+            ORDER BY number_of_first_time_shots DESC;
+            """
 
     # ==========================================================================
 
@@ -248,7 +257,17 @@ def Q_4(cursor, conn, execution_time):
     # ==========================================================================
     # Enter QUERY within the quotes:
 
-    query = """ """
+    query = """
+            SELECT Teams.team_name, COUNT(Passes.id) AS number_of_passes
+            FROM Passes JOIN Teams ON Passes.team_id = Teams.team_id
+            JOIN Matches ON Passes.match_id = Matches.match_id
+            JOIN Seasons ON Matches.season_id = Seasons.season_id AND Matches.competition_id = Seasons.competition_id
+            WHERE Seasons.season_id = 90 AND Seasons.competition_id = 11
+            GROUP BY Teams.team_name
+            HAVING COUNT(Passes.id) > 0
+            ORDER BY number_of_passes DESC;
+
+            """
 
     # ==========================================================================
 
@@ -267,7 +286,16 @@ def Q_5(cursor, conn, execution_time):
     # ==========================================================================
     # Enter QUERY within the quotes:
 
-    query = """ """
+    query = """
+            SELECT Players.player_name, COUNT(Passes.recipient_id) AS number_of_times_recipient
+            FROM Passes JOIN Players ON Passes.recipient_id = Players.player_id
+            JOIN Matches ON Passes.match_id = Matches.match_id
+            JOIN Seasons ON Matches.season_id = Seasons.season_id AND Matches.competition_id = Seasons.competition_id
+            WHERE Seasons.season_id = 44 AND Seasons.competition_id = 2
+            GROUP BY Players.player_name
+            HAVING COUNT(Passes.recipient_id) > 0
+            ORDER BY number_of_times_recipient DESC;
+            """
 
     # ==========================================================================
 
@@ -286,7 +314,16 @@ def Q_6(cursor, conn, execution_time):
     # ==========================================================================
     # Enter QUERY within the quotes:
 
-    query = """ """
+    query = """
+            SELECT Teams.team_name, COUNT(Shots.id) AS number_of_shots
+            FROM Shots JOIN Teams ON Shots.team_id = Teams.team_id
+            JOIN Matches ON Shots.match_id = Matches.match_id
+            JOIN Seasons ON Matches.season_id = Seasons.season_id AND Matches.competition_id = Seasons.competition_id
+            WHERE Seasons.season_id = 44  AND Seasons.competition_id = 2
+            GROUP BY Teams.team_name
+            HAVING COUNT(Shots.id) > 0
+            ORDER BY number_of_shots DESC;
+            """
 
     # ==========================================================================
 
@@ -305,7 +342,16 @@ def Q_7(cursor, conn, execution_time):
     # ==========================================================================
     # Enter QUERY within the quotes:
 
-    query = """ """
+    query = """
+            SELECT Players.player_name, COUNT(*) AS number_of_through_balls
+            FROM Passes JOIN Players ON Passes.player_id = Players.player_id
+            JOIN Matches ON Passes.match_id = Matches.match_id
+            JOIN Seasons ON Matches.season_id = Seasons.season_id AND Matches.competition_id = Seasons.competition_id
+            WHERE Passes.through_ball = TRUE AND Seasons.season_id = 90 AND Seasons.competition_id = 11  
+            GROUP BY Players.player_name
+            HAVING COUNT(*) > 0
+            ORDER BY number_of_through_balls DESC;
+            """
 
     # ==========================================================================
 
@@ -324,7 +370,16 @@ def Q_8(cursor, conn, execution_time):
     # ==========================================================================
     # Enter QUERY within the quotes:
 
-    query = """ """
+    query = """
+            SELECT Teams.team_name, COUNT(Passes.id) AS number_of_through_balls
+            FROM Passes JOIN Teams ON Passes.team_id = Teams.team_id
+            JOIN Matches ON Passes.match_id = Matches.match_id
+            JOIN Seasons ON Matches.season_id = Seasons.season_id AND Matches.competition_id = Seasons.competition_id
+            WHERE Passes.through_ball = TRUE AND Seasons.season_id = 90 AND Seasons.competition_id = 11
+            GROUP BY Teams.team_name
+            HAVING COUNT(Passes.id) > 0
+            ORDER BY number_of_through_balls DESC;
+            """
 
     # ==========================================================================
 
@@ -343,7 +398,16 @@ def Q_9(cursor, conn, execution_time):
     # ==========================================================================
     # Enter QUERY within the quotes:
 
-    query = """ """
+    query = """
+            SELECT Players.player_name, COUNT(*) AS number_of_successful_dribbles
+            FROM Dribbles JOIN Players ON Dribbles.player_id = Players.player_id
+            JOIN Matches ON Dribbles.match_id = Matches.match_id
+            JOIN Seasons ON Matches.season_id = Seasons.season_id AND Matches.competition_id = Seasons.competition_id
+            WHERE Dribbles.outcome_id = 8  AND Seasons.season_id IN (90, 4, 42)  AND Seasons.competition_id = 11 
+            GROUP BY Players.player_name
+            HAVING COUNT(*) > 0
+            ORDER BY number_of_successful_dribbles DESC;
+            """
 
     # ==========================================================================
 
@@ -362,7 +426,17 @@ def Q_10(cursor, conn, execution_time):
     # ==========================================================================
     # Enter QUERY within the quotes:
 
-    query = """ """
+    query = """
+            SELECT Players.player_name, COUNT(*) AS number_of_times_dribbled_past
+            FROM Dribbles_Past
+            JOIN Players ON Dribbles_Past.player_id = Players.player_id
+            JOIN Matches ON Dribbles_Past.match_id = Matches.match_id
+            JOIN Seasons ON Matches.season_id = Seasons.season_id AND Matches.competition_id = Seasons.competition_id
+            WHERE Seasons.season_id = 90 AND Seasons.competition_id = 11
+            GROUP BY Players.player_name
+            HAVING COUNT(*) > 0
+            ORDER BY number_of_times_dribbled_past ASC;    
+            """
 
     # ==========================================================================
 

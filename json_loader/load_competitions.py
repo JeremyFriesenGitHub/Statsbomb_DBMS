@@ -80,9 +80,9 @@ def insert_into_seasons(cursor, season):
 
 def main():
     conn_params = {
-        'dbname': os.getenv('DB_NAME', 'postgres'),
+        'dbname': os.getenv('DB_NAME', 'project_database'),
         'user': os.getenv('DB_USER', 'postgres'),
-        'password': os.getenv('DB_PASSWORD', 'postgres'),
+        'password': os.getenv('DB_PASSWORD', '1234'),
         'host': os.getenv('DB_HOST', 'localhost'),
         'port': os.getenv('DB_PORT', '5432')
     }
