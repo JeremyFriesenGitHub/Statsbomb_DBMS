@@ -3,7 +3,6 @@ import json
 import psycopg
 
 
-
 def create_tables(cursor):
     create_event_types_table = """
     CREATE TABLE Event_types (
@@ -1330,9 +1329,9 @@ def load_key_passes_and_shots(cursor, events_dir, match_ids):
                 for event in events:
                     if 'shot' in event and 'key_pass_id' in event['shot'] and event['shot']['key_pass_id'] is not None:
                         insert_key_passes_and_shots(cursor, event['shot']['key_pass_id'], event['id'])
-                    if 'pass' in event and 'assisted_shot_id' in event['pass'] and event['pass'][
-                        'assisted_shot_id'] is not None:
+                    if 'pass' in event and 'assisted_shot_id' in event['pass'] and event['pass']['assisted_shot_id'] is not None:
                         insert_key_passes_and_shots(cursor, event['id'], event['pass']['assisted_shot_id'])
+
 
 def load_cards(cursor, events_dir, match_ids):
     for match_id in match_ids:
@@ -1345,7 +1344,6 @@ def load_cards(cursor, events_dir, match_ids):
                         insert_card_behaviours(cursor, event['id'])
                     if "foul_committed" in event and event['foul_committed'].get('card') is not None:
                         insert_card_fouls(cursor, event['id'])
-
 
 
 def insert_block(cursor, event, match_id):
@@ -1710,7 +1708,6 @@ def insert_shot(cursor, event, match_id):
         print(f"Error inserting shot event {event['id']}: {e}")
 
 
-
 def insert_pass(cursor, event, match_id):
     try:
         event_timestamp = event.get('timestamp')
@@ -1769,7 +1766,6 @@ def insert_pass(cursor, event, match_id):
                         under_pressure, off_camera, counterpress, out, match_id))
     except Exception as e:
         print(f"Error inserting pass event {event['id']}: {e}")
-
 
 
 def insert_own_goal2(cursor, event, match_id):
@@ -2410,6 +2406,7 @@ def insert_card(cursor, card):
     except Exception as e:
         print(f"Error inserting card {card['id']}: {e}")
 
+
 def insert_card_behaviours(cursor, event_id):
     try:
         insert_query = """
@@ -2422,6 +2419,7 @@ def insert_card_behaviours(cursor, event_id):
     except Exception as e:
         print(f"Error inserting card {event_id}: {e}")
 
+
 def insert_card_fouls(cursor, event_id):
     try:
         insert_query = """
@@ -2433,6 +2431,7 @@ def insert_card_fouls(cursor, event_id):
         cursor.execute(insert_query, (event_id,))
     except Exception as e:
         print(f"Error inserting card {event_id}: {e}")
+
 
 def insert_height(cursor, height):
     try:
@@ -2555,7 +2554,7 @@ def main():
     }
 
     conn_params = {
-        'dbname': os.getenv('DB_NAME', 'query_database'),
+        'dbname': os.getenv('DB_NAME', 'project_database'),
         'user': os.getenv('DB_USER', 'postgres'),
         'password': os.getenv('DB_PASSWORD', '1234'),
         'host': os.getenv('DB_HOST', 'localhost'),
